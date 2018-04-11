@@ -1,9 +1,10 @@
 # encoding=utf-8
 # ----------------------------------------
 # 语言：Python2.7
-# 日期：2017-03-24
-# 作者：九茶<http://blog.csdn.net/bone_ace>
-# 功能：根据公司名称抓取员工的LinkedIn数据
+# 日期：2018.04
+# 原作者：九茶<http://blog.csdn.net/bone_ace>
+# 修改者：武俍俍
+# 功能：根据关键字抓取LinkedIn数据
 # ----------------------------------------
 
 import sys
@@ -83,23 +84,33 @@ def parse(content, url):
     firstname = re.findall('"firstName":"(.*?)"', profile_txt)
     lastname = re.findall('"lastName":"(.*?)"', profile_txt)
     if firstname and lastname:
+        fout.write('姓名: %s%s    Linkedin: %s' % (lastname[0], firstname[0], url))
+        fout.write('\n')
         print '姓名: %s%s    Linkedin: %s' % (lastname[0], firstname[0], url)
 
         summary = re.findall('"summary":"(.*?)"', profile_txt)
         if summary:
+            fout.write('简介: %s' % summary[0])
+            fout.write('\n')
             print '简介: %s' % summary[0]
 
         occupation = re.findall('"headline":"(.*?)"', profile_txt)
         if occupation:
+            fout.write('身份/职位: %s' % occupation[0])
+            fout.write('\n')
             print '身份/职位: %s' % occupation[0]
 
         locationName = re.findall('"locationName":"(.*?)"', profile_txt)
         if locationName:
+            fout.write('坐标: %s' % locationName[0])
+            fout.write('\n')
             print '坐标: %s' % locationName[0]
 
         networkInfo_txt = ' '.join(re.findall('(\{[^\{]*?profile\.ProfileNetworkInfo"[^\}]*?\})', content))
         connectionsCount = re.findall('"connectionsCount":(\d+)', networkInfo_txt)
         if connectionsCount:
+            fout.write('好友人数: %s' % connectionsCount[0])
+            fout.write('\n')
             print '好友人数: %s' % connectionsCount[0]
 
         sesameCredit_txt = ' '.join(re.findall('(\{[^\{]*?profile\.SesameCreditGradeInfo"[^\}]*?\})', content))
@@ -107,23 +118,33 @@ def parse(content, url):
         credit_grade = re.findall('"grade":"(.*?)"', sesameCredit_txt)
         if credit_grade and credit_grade[0] in CREDIT_GRADE.keys():
             credit_lastModifiedAt_date = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(int(credit_lastModifiedAt[0][:10]))) if credit_lastModifiedAt else ''
+            fout.write('芝麻信用: %s %s' % (CREDIT_GRADE[credit_grade[0]], '   最后更新时间: %s' % credit_lastModifiedAt_date if credit_lastModifiedAt_date else ''))
+            fout.write('\n')
             print '芝麻信用: %s %s' % (CREDIT_GRADE[credit_grade[0]], '   最后更新时间: %s' % credit_lastModifiedAt_date if credit_lastModifiedAt_date else '')
 
         wechat_txt = ' '.join(re.findall('(\{[^\{]*?profile\.WeChatContactInfo"[^\}]*?\})', content))
         wechat_image = re.findall('"qrCodeImageUrl":"(http.*?)"', wechat_txt)
         wechat_name = re.findall('"name":"(.*?)"', wechat_txt)
         if wechat_name:
+            fout.write('微信昵称: %s %s' % (wechat_name[0], '    二维码(链接): %s' % wechat_image[0].replace('&#61;', '=').replace('&amp;', '&') if wechat_image else ''))
+            fout.write('\n')
             print '微信昵称: %s %s' % (wechat_name[0], '    二维码(链接): %s' % wechat_image[0].replace('&#61;', '=').replace('&amp;', '&') if wechat_image else '')
         elif wechat_image:
+            fout.write('微信二维码(链接): %s' % wechat_image[0].replace('&#61;', ''))
+            fout.write('\n')
             print '微信二维码(链接): %s' % wechat_image[0].replace('&#61;', '')
 
         website_txt = ' '.join(re.findall('("included":.*?profile\.StandardWebsite",.*?\})', content))
         website = re.findall('"url":"(.*?)"', website_txt)
         if website:
+            fout.write('个人网站: %s' % website[0])
+            fout.write('\n')
             print '个人网站: %s' % website[0]
 
         educations = re.findall('(\{[^\{]*?profile\.Education"[^\}]*?\})', content)
         if educations:
+            fout.write('教育经历:')
+            fout.write('\n')
             print '教育经历:'
         for one in educations:
             schoolName = re.findall('"schoolName":"(.*?)"', one)
@@ -154,10 +175,14 @@ def parse(content, url):
             if schoolName:
                 fieldOfStudy = '   %s' % fieldOfStudy[0] if fieldOfStudy else ''
                 degreeName = '   %s' % degreeName[0] if degreeName else ''
+                fout.write('    %s %s %s %s' % (schoolName[0], schoolTime, fieldOfStudy, degreeName))
+                fout.write('\n')
                 print '    %s %s %s %s' % (schoolName[0], schoolTime, fieldOfStudy, degreeName)
 
         position = re.findall('(\{[^\{]*?profile\.Position"[^\}]*?\})', content)
         if position:
+            fout.write('工作经历:')
+            fout.write('\n')
             print '工作经历:'
         for one in position:
             companyName = re.findall('"companyName":"(.*?)"', one)
@@ -188,19 +213,27 @@ def parse(content, url):
             if companyName:
                 title = '   %s' % title[0] if title else ''
                 locationName = '   %s' % locationName[0] if locationName else ''
+                fout.write('    %s %s %s %s' % (companyName[0], positionTime, title, locationName))
+                fout.write('\n')
                 print '    %s %s %s %s' % (companyName[0], positionTime, title, locationName)
 
         publication = re.findall('(\{[^\{]*?profile\.Publication"[^\}]*?\})', content)
         if publication:
+            fout.write('出版作品:')
+            fout.write('\n')
             print '出版作品:'
         for one in publication:
             name = re.findall('"name":"(.*?)"', one)
             publisher = re.findall('"publisher":"(.*?)"', one)
             if name:
+                fout.write('    %s %s' % (name[0], '   出版社: %s' % publisher[0] if publisher else ''))
+                fout.write('\n')
                 print '    %s %s' % (name[0], '   出版社: %s' % publisher[0] if publisher else '')
 
         honor = re.findall('(\{[^\{]*?profile\.Honor"[^\}]*?\})', content)
         if honor:
+            fout.write('荣誉奖项:')
+            fout.write('\n')
             print '荣誉奖项:'
         for one in honor:
             title = re.findall('"title":"(.*?)"', one)
@@ -216,10 +249,14 @@ def parse(content, url):
                     if month:
                         issueTime += '.%s' % month[0]
             if title:
+                fout.write('    %s %s %s' % (title[0], '   发行人: %s' % issuer[0] if issuer else '', issueTime))
+                fout.write('\n')
                 print '    %s %s %s' % (title[0], '   发行人: %s' % issuer[0] if issuer else '', issueTime)
 
         organization = re.findall('(\{[^\{]*?profile\.Organization"[^\}]*?\})', content)
         if organization:
+            fout.write('参与组织:')
+            fout.write('\n')
             print '参与组织:'
         for one in organization:
             name = re.findall('"name":"(.*?)"', one)
@@ -246,10 +283,14 @@ def parse(content, url):
                     enddate = '现在'
                 organizationTime += '   %s ~ %s' % (startdate, enddate)
             if name:
+                fout.write('    %s %s' % (name[0], organizationTime))
+                fout.write('\n')
                 print '    %s %s' % (name[0], organizationTime)
 
         patent = re.findall('(\{[^\{]*?profile\.Patent"[^\}]*?\})', content)
         if patent:
+            fout.write('专利发明:')
+            fout.write('\n')
             print '专利发明:'
         for one in patent:
             title = re.findall('"title":"(.*?)"', one)
@@ -271,10 +312,14 @@ def parse(content, url):
                         if day:
                             patentTime += '.%s' % day[0]
             if title:
+                fout.write('    %s %s %s %s %s %s' % (title[0], '   发行者: %s' % issuer[0] if issuer else '', '   专利号: %s' % number[0] if number else '', '   所在国家: %s' % localizedIssuerCountryName[0] if localizedIssuerCountryName else '', patentTime, '   专利详情页: %s' % url[0] if url else ''))
+                fout.write('\n')
                 print '    %s %s %s %s %s %s' % (title[0], '   发行者: %s' % issuer[0] if issuer else '', '   专利号: %s' % number[0] if number else '', '   所在国家: %s' % localizedIssuerCountryName[0] if localizedIssuerCountryName else '', patentTime, '   专利详情页: %s' % url[0] if url else '')
 
         project = re.findall('(\{[^\{]*?profile\.Project"[^\}]*?\})', content)
         if project:
+            fout.write('所做项目:')
+            fout.write('\n')
             print '所做项目:'
         for one in project:
             title = re.findall('"title":"(.*?)"', one)
@@ -302,10 +347,14 @@ def parse(content, url):
                     enddate = '现在'
                 projectTime += '   时间: %s ~ %s' % (startdate, enddate)
             if title:
+                fout.write('    %s %s %s' % (title[0], projectTime, '   项目描述: %s' % description[0] if description else ''))
+                fout.write('\n')
                 print '    %s %s %s' % (title[0], projectTime, '   项目描述: %s' % description[0] if description else '')
 
         volunteer = re.findall('(\{[^\{]*?profile\.VolunteerExperience"[^\}]*?\})', content)
         if volunteer:
+            fout.write('志愿者经历:')
+            fout.write('\n')
             print '志愿者经历:'
         for one in volunteer:
             companyName = re.findall('"companyName":"(.*?)"', one)
@@ -333,7 +382,10 @@ def parse(content, url):
                     enddate = '现在'
                 volunteerTime += '   时间: %s ~ %s' % (startdate, enddate)
             if companyName:
+                fout.write('    %s %s %s' % (companyName[0], volunteerTime, '   角色: %s' % role[0] if role else ''))
+                fout.write('\n')
                 print '    %s %s %s' % (companyName[0], volunteerTime, '   角色: %s' % role[0] if role else '')
+    fout.write('\n\n')
     print '\n\n'
 
 
@@ -365,11 +417,15 @@ def crawl(url, s):
 
 if __name__ == '__main__':
     s = login(laccount='15903515323', lpassword='15903515323')  # 测试账号
-    company_name = raw_input('Input the key word you want to crawl:')
+    key_name = raw_input('Input the key word you want to crawl:')
     maxpage = 50  # 抓取前50页百度搜索结果，百度搜索最多显示76页
 
+    # 创建结果文件
+    file_name = key_name + '.txt'
+    fout = open(file_name, 'a+')
+
     # 百度搜索
-    url = 'http://www.baidu.com/s?ie=UTF-8&wd=%20%7C%20领英%20' + quote(company_name) + '%20site%3Alinkedin.com'
+    url = 'http://www.baidu.com/s?ie=UTF-8&wd=%20%7C%20领英%20' + quote(key_name) + '%20site%3Alinkedin.com'
     results = []
     failure = 0
     while len(url) > 0 and failure < 10:
@@ -395,3 +451,4 @@ if __name__ == '__main__':
             print 'search failed: %s' % r.status_code
     if failure >= 10:
         print 'search failed: %s' % url
+    fout.close()
